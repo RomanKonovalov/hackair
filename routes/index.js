@@ -79,8 +79,8 @@ function loadData() {
 					windDirection:windDirection
                 };
             }).filter(e => !_.isNull(e)).value();
-			console.log(pollutants);
-            //_.forEach(pollutants, e => putReading(e));
+			//console.log(pollutants);
+            _.forEach(pollutants, e => putReading(e));
         })
         //.then(() => client.query("select time_stamp from public.readings WHERE humidity IS NULL ", []))
         //.then(queryRes => timestamps = queryRes.rows)
@@ -102,7 +102,7 @@ function loadData() {
 }
 
 router.get('/', (req, res, next) => {
-    loadData().then(() => res.render('index'));
+    res.render('index');
 });
 
 router.get('/forecast', (req, res, next) => {
@@ -123,7 +123,7 @@ router.get('/forecast', (req, res, next) => {
 });
 
 function putReading(e) {
-    client.query("INSERT INTO public.readings(PM2_5, PM10, SENSOR_ID, TIME_STAMP) VALUES($1, $2, $3, $4)", [e.pm2_5, e.pm10, e.sensorId, e.timestamp])
+    client.query("INSERT INTO public.readings(PM2_5, PM10, SENSOR_ID, TIME_STAMP, humidity, temperature, wind_speed, wind_direction) VALUES($1, $2, $3, $4)", [e.pm2_5, e.pm10, e.sensorId, e.timestamp, e.humidity, e.temperature, e.windSpeed, e.windDirection])
         .catch(e => console.error(e.stack))
 }
 
