@@ -123,7 +123,7 @@ router.get('/forecast', (req, res, next) => {
 });
 
 function putReading(e) {
-    client.query("INSERT INTO public.readings(PM2_5, PM10, SENSOR_ID, TIME_STAMP, humidity, temperature, wind_speed, wind_direction) VALUES($1, $2, $3, $4)", [e.pm2_5, e.pm10, e.sensorId, e.timestamp, e.humidity, e.temperature, e.windSpeed, e.windDirection])
+    client.query("INSERT INTO public.readings(PM2_5, PM10, SENSOR_ID, TIME_STAMP, humidity, temperature, wind_speed, wind_direction) VALUES($1, $2, $3, $4, $5, $6, $7, $8)", [e.pm2_5, e.pm10, e.sensorId, e.timestamp, e.humidity, e.temperature, e.windSpeed, e.windDirection])
         .catch(e => console.error(e.stack))
 }
 
