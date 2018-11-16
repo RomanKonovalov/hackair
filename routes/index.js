@@ -15,7 +15,7 @@ const client = new Client({
 });
 client.connect();
 
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('* * * * *', () => {
     console.log('loading data begin');
     loadData();
     console.log('loading data done');
@@ -26,18 +26,34 @@ function loadData() {
     d.setDate(d.getDate() - 2);
 
     let timestamps;
+	
+	let optionsWeather = {
+		uri: 'https://api.openweathermap.org/data/2.5/weather',
+		qs: {
+			lat: 53.923259,
+			lon: 27.632786,
+			APPID: '89a08f4b50a1b7ab9af9106afb35f379',
+			units: 'metric'
+		},
+		json: true
+	};
+	let humidity, temperature, windDirection, windSpeed;
 
-    return client.query("select time_stamp from public.readings ORDER BY time_stamp DESC LIMIT 1", [])
+    return rp(optionsWeather)
+		.then(data => {
+			humidity = data.main.humidity;
+			temperature = data.main.temp;
+			windSpeed = data.wind.speed;
+			windDirection = data.wind.deg;
+		})
+		.then(() => client.query("select time_stamp from public.readings ORDER BY time_stamp DESC LIMIT 1", []))
         .then(queryRes => {
                 let options = {
                     uri: 'https://api.hackair.eu/measurements',
                     qs: {
-                        sensor: '1099',
+                        location: '27.31887817382813,53.83348592751201|27.807426452636722,53.95487343610632',
                         timestampStart: queryRes.rows[0] ? queryRes.rows[0].time_stamp.toISOString() : d.toISOString(),
                         show: 'all'
-                    },
-                    headers: {
-                        'authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vYXBpLmhhY2thaXIuZXUvdXNlcnMvbG9naW4iLCJpYXQiOjE1NDIwMDM2NzgsIm5iZiI6MTU0MjAwMzY3OCwianRpIjoiYlo4RFU5dGtVSjlOc0xKWiIsInN1YiI6Mjg3NiwicHJ2IjoiODdlMGFmMWVmOWZkMTU4MTJmZGVjOTcxNTNhMTRlMGIwNDc1NDZhYSJ9.vqtZWmXWxy2mndVtbjEnwASqwrZTAgAaeeAGnCVoB6o'
                     },
                     json: true
                 };
@@ -56,16 +72,20 @@ function loadData() {
                     'pm2_5': pm2_5.pollutant_q.value,
                     'pm10': pm10.pollutant_q.value,
                     sensorId: pm2_5.source_info.sensor.id,
-                    timestamp: new Date(pm2_5.datetime * 1000)
+                    timestamp: new Date(pm2_5.datetime * 1000),
+					humidity: humidity,
+					temperature:temperature,
+					windSpeed:windSpeed,
+					windDirection:windDirection
                 };
             }).filter(e => !_.isNull(e)).value();
-
-            _.forEach(pollutants, e => putReading(e));
+			console.log(pollutants);
+            //_.forEach(pollutants, e => putReading(e));
         })
-        .then(() => client.query("select time_stamp from public.readings WHERE humidity IS NULL ", []))
-        .then(queryRes => timestamps = queryRes.rows)
-        .then(() => rp({uri: 'http://pogoda.by/meteograph/jsonp.php?url=print_FM12_archive-XML.php?plot=26850&dt=' + moment().format("YYYY-MM-DD")}))
-        .then(body => {
+        //.then(() => client.query("select time_stamp from public.readings WHERE humidity IS NULL ", []))
+        //.then(queryRes => timestamps = queryRes.rows)
+        //.then(() => rp({uri: 'http://pogoda.by/meteograph/jsonp.php?url=print_FM12_archive-XML.php?plot=26850&dt=' + moment().format("YYYY-MM-DD")}))
+        /*.then(body => {
             let collection = JSON.parse(body.replace(/^callback\(/, '').replace(/\);$/, ''));
             _.forEach(timestamps, function (p) {
                 let pogodabyData = _.chain(collection.conditions.tabular.time).filter(t => {
@@ -77,7 +97,7 @@ function loadData() {
                     updateReading(p.time_stamp, pogodabyData.humidity['@attributes'].value || null, pogodabyData.temperature['@attributes'].value || null, pogodabyData.windDirection['@attributes'].deg || null, pogodabyData.windDirection['@attributes'].name || null, pogodabyData.windSpeed['@attributes'].ms || null)
                 }
             });
-        })
+        })*/
         .catch(e => console.error(e.stack));
 }
 
