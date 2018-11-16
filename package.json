@@ -1,0 +1,25 @@
+{
+  "name": "hackair",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "body-parser": "^1.18.3",
+    "cookie-parser": "~1.4.3",
+    "debug": "~2.6.0",
+    "ejs": "~2.5.5",
+    "express": "^4.15.2",
+    "lodash": "^4.17.11",
+    "moment-timezone": "^0.5.23",
+    "morgan": "^1.9.1",
+    "node-cron": "^2.0.3",
+    "pg": "^7.6.1",
+    "request": "^2.88.0",
+    "request-promise": "^4.2.2",
+    "serve-favicon": "^2.5.0",
+    "highcharts": "^6.2.0",
+    "jquery": "^3.3.1"
+  }
+}
