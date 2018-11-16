@@ -11,14 +11,13 @@ const cron = require('node-cron');
 
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
-    ssl: true
+    ssl: false
 });
 client.connect();
 
-cron.schedule('* * * * *', () => {
+cron.schedule('*/5 * * * *', () => {
     console.log('loading data begin');
-    loadData();
-    console.log('loading data done');
+    loadData().then(() => console.log('loading data done'));
 });
 
 function loadData() {
