@@ -442,12 +442,21 @@ $(document).ready(function () {
     d.setDate(d.getDate() - 1);
     $.ajax({
         dataType: 'json',
-        url: 'forecast',
+        url: 'measurements',
         data: {
             from: d.getTime()
         },
-        success: function (xml) {
-            window.meteogram = new Meteogram(xml, 'container');
+        success: function (measurements) {
+            let i = 0;
+            _.forOwn(measurements, (value, location) => {
+                $('#container').append('<div id="container' + i + '" style="min-width: 310px; min-height: 400px; margin: 0 auto">' +
+                    '<div style="margin-top: 100px; text-align: center" id="loading">' +
+                    '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
+                '</div>' +
+                '</div>');
+                window.meteogram = new Meteogram({time: value, locationName: location}, 'container' + i);
+                i++;
+            });
         },
         error: Meteogram.prototype.error
     });
