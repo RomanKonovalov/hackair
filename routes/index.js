@@ -20,9 +20,6 @@ cron.schedule('*/5 * * * *', () => {
     loadData().then(() => console.log('loading data done ' + new Date()));
 });
 
-console.log('loading data begin ' + new Date());
-loadData().then(() => console.log('loading data done ' + new Date()));
-
 function loadData() {
     let d = new Date();
     d.setDate(d.getDate() - 2);

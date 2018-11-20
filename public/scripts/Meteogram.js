@@ -373,7 +373,7 @@ Meteogram.prototype.parseYrData = function () {
         function (time, i) {
             // Get the times - only Safari can't parse ISO8601 so we need to do
             // some replacements
-            let from = moment.tz(time.time_stamp, "Europe/Minsk").add(3, 'hours').toDate();
+            let from = moment.tz(time.time_stamp, "Europe/Minsk").toDate();
             let quality;
             let color;
             if (time.pm2_5 >= 0 && time.pm2_5 <= 10) {
