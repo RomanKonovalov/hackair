@@ -449,7 +449,7 @@ $(document).ready(function () {
         success: function (measurements) {
             let i = 0;
             _.forOwn(measurements, (value, location) => {
-                $('#container').append('<div id="container' + i + '" style="min-width: 310px; min-height: 400px; margin: 0 auto">' +
+                $('#container').append('<div id="container' + i + '" style="margin: 0 auto">' +
                     '<div style="margin-top: 100px; text-align: center" id="loading">' +
                     '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
                 '</div>' +
