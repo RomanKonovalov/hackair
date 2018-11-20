@@ -120,13 +120,13 @@ Meteogram.prototype.getChartOptions = function () {
         chart: {
             renderTo: this.container,
             marginBottom: 100,
-            marginRight: 40,
+            marginRight: 30,
             marginTop: 50,
             plotBorderWidth: 1,
-            height: 500,
+            height: 400,
             alignTicks: false,
             scrollablePlotArea: {
-                minWidth: 720
+                minWidth: 310
             }
         },
 
@@ -449,7 +449,7 @@ $(document).ready(function () {
         success: function (measurements) {
             let i = 0;
             _.forOwn(measurements, (value, location) => {
-                $('#container').append('<div id="container' + i + '" style="margin: 0 auto">' +
+                $('#container').append('<div id="container' + i + '" style="min-width: 310px; height: 400px; margin: 0 auto">' +
                     '<div style="margin-top: 100px; text-align: center" id="loading">' +
                     '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
                 '</div>' +
