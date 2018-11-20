@@ -452,8 +452,8 @@ $(document).ready(function () {
                 $('#container').append('<div id="container' + i + '" style="min-width: 310px; min-height: 400px; margin: 0 auto">' +
                     '<div style="margin-top: 100px; text-align: center" id="loading">' +
                     '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
-                '</div>' +
-                '</div>');
+                    '</div>' +
+                    '</div>');
                 window.meteogram = new Meteogram({time: value, locationName: location}, 'container' + i);
                 i++;
             });

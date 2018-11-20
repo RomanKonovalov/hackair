@@ -17,12 +17,17 @@ client.connect();
 
 cron.schedule('*/5 * * * *', () => {
     console.log('loading data begin ' + new Date());
-    loadData().then(() => console.log('loading data done ' + + new Date()));
+    loadData().then(() => console.log('loading data done ' + new Date()));
 });
+
+console.log('loading data begin ' + new Date());
+loadData().then(() => console.log('loading data done ' + new Date()));
 
 function loadData() {
     let d = new Date();
     d.setDate(d.getDate() - 2);
+
+    let timestamps;
 
     return client.query("select time_stamp from public.measurements ORDER BY time_stamp DESC LIMIT 1", [])
         .then(queryRes => {
@@ -57,45 +62,58 @@ function loadData() {
                     };
                 }).value();
 
-                let optionsWeather = {
-                    uri: 'https://api.openweathermap.org/data/2.5/weather',
-                    qs: {
-                        lat: datetimeGroup[0].latitude,
-                        lon: datetimeGroup[0].longitude,
-                        APPID: '89a08f4b50a1b7ab9af9106afb35f379',
-                        units: 'metric'
-                    },
-                    json: true
-                };
-                rp(optionsWeather)
-                    .then(data => {
-                        _.forEach(datetimeGroup, e => {
-                            e.humidity = data.main.humidity;
-                            e.temperature = data.main.temp;
-                            e.windSpeed = data.wind.speed;
-                            e.windDirection = data.wind.deg;
-                            putReading(e);
-                        });
-                    });
+                /*let optionsWeather = {
+                 uri: 'https://api.openweathermap.org/data/2.5/weather',
+                 qs: {
+                 lat: datetimeGroup[0].latitude,
+                 lon: datetimeGroup[0].longitude,
+                 APPID: '89a08f4b50a1b7ab9af9106afb35f379',
+                 units: 'metric'
+                 },
+                 json: true
+                 };
+                 rp(optionsWeather)
+                 .then(data => {
+                 _.forEach(datetimeGroup, e => {
+                 e.humidity = data.main.humidity;
+                 e.temperature = data.main.temp;
+                 e.windSpeed = data.wind.speed;
+                 e.windDirection = data.wind.deg;
+                 putReading(e);
+                 });
+                 });*/
+
+                _.forEach(datetimeGroup, e => putReading(e));
             });
 
         })
-        //.then(() => client.query("select time_stamp from public.readings WHERE humidity IS NULL ", []))
-        //.then(queryRes => timestamps = queryRes.rows)
-        //.then(() => rp({uri: 'http://pogoda.by/meteograph/jsonp.php?url=print_FM12_archive-XML.php?plot=26850&dt=' + moment().format("YYYY-MM-DD")}))
-        /*.then(body => {
-            let collection = JSON.parse(body.replace(/^callback\(/, '').replace(/\);$/, ''));
-            _.forEach(timestamps, function (p) {
-                let pogodabyData = _.chain(collection.conditions.tabular.time).filter(t => {
-                    let from = moment.tz(t['@attributes'].from, "Europe/Minsk");
-                    let to = moment.tz(t['@attributes'].to, "Europe/Minsk");
-                    return moment(p.time_stamp).isBetween(from, to);
-                }).head().value();
-                if (pogodabyData) {
-                    updateReading(p.time_stamp, pogodabyData.humidity['@attributes'].value || null, pogodabyData.temperature['@attributes'].value || null, pogodabyData.windDirection['@attributes'].deg || null, pogodabyData.windDirection['@attributes'].name || null, pogodabyData.windSpeed['@attributes'].ms || null)
-                }
-            });
-        })*/
+        .then(() => client.query("select time_stamp from public.measurements where humidity is null order by time_stamp asc", []))
+        .then(queryRes => {
+            timestamps = queryRes.rows;
+
+            let diff = moment().diff(moment(queryRes.rows[0].time_stamp), 'days') + 1;
+
+            let i;
+            let promises = [];
+            for (i = 0; i < diff; i = i + 3) {
+                promises.push(rp({uri: 'http://pogoda.by/meteograph/jsonp.php?url=print_FM12_archive-XML.php?plot=26850&dt=' + moment().add(-i, 'days').format("YYYY-MM-DD")})
+                    .then(body => {
+                        let collection = JSON.parse(body.replace(/^callback\(/, '').replace(/\);$/, ''));
+                        _.forEach(timestamps, function (p) {
+                            let pogodabyData = _.chain(collection.conditions.tabular.time).filter(t => {
+                                let from = moment.tz(t['@attributes'].from, "Europe/Minsk");
+                                let to = moment.tz(t['@attributes'].to, "Europe/Minsk");
+                                return moment(p.time_stamp).isBetween(from, to);
+                            }).head().value();
+                            if (pogodabyData) {
+                                updateReading(p.time_stamp, pogodabyData.humidity['@attributes'].value || null, pogodabyData.temperature['@attributes'].value || null, pogodabyData.windDirection['@attributes'].deg || null, pogodabyData.windSpeed['@attributes'].ms || null)
+                            }
+                        });
+                    })
+                    .catch(e => console.error(e.stack)));
+            }
+            return Promise.all(promises);
+        })
         .catch(e => console.error(e.stack));
 }
 
@@ -110,7 +128,7 @@ router.get('/measurements', (req, res, next) => {
     let from = req.param('from') ? new Date(req.param('from') * 1) : d;
     client.query("select * from public.measurements where TIME_STAMP > $1 order by TIME_STAMP asc", [from])
         .then(queryRes => {
-            res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude +'_' + e.latitude));
+            res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude + '_' + e.latitude));
 
         })
         .catch(e => console.error(e.stack));
@@ -122,8 +140,8 @@ function putReading(e) {
         .catch(e => console.error(e.stack))
 }
 
-function updateReading(timestamp, humidity, temperature, wind_direction, wind_direction_name, wind_speed) {
-    client.query("update public.measurements set humidity=$1, temperature=$2, wind_direction=$3, wind_direction_name=$4, wind_speed=$5 where time_stamp = $6", [humidity, temperature, wind_direction, wind_direction_name, wind_speed, timestamp])
+function updateReading(timestamp, humidity, temperature, wind_direction, wind_speed) {
+    client.query("update public.measurements set humidity=$1, temperature=$2, wind_direction=$3, wind_speed=$4 where time_stamp = $5", [humidity, temperature, wind_direction, wind_speed, timestamp])
         .catch(e => console.error(e.stack))
 }
 
