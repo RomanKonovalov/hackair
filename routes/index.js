@@ -121,7 +121,6 @@ router.get('/', (req, res, next) => {
 router.get('/measurements', (req, res, next) => {
     let d = new Date();
     d.setDate(d.getDate() - 2);
-    //client.connect();
     let from = req.param('from') ? moment.tz(req.param('from') * 1, "Europe/Minsk").add(3, 'hours').toDate() : d;
     client.query("select * from public.measurements where TIME_STAMP > $1 order by TIME_STAMP asc", [from])
         .then(queryRes => {
