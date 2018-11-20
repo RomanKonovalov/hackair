@@ -131,6 +131,14 @@ router.get('/measurements', (req, res, next) => {
 
 });
 
+router.get('/polarChart', (req, res, next) => {
+    client.query("SELECT longitude, latitude, wind_direction, AVG(pm2_5) as pm2_5_avg, AVG(pm10) as pm10_avg FROM measurements GROUP BY wind_direction, longitude, latitude HAVING wind_direction is NOT NULL ORDER BY wind_direction", [])
+        .then(queryRes => {
+            res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude + '_' + e.latitude));
+        })
+        .catch(e => console.error(e.stack));
+});
+
 function putReading(e) {
     client.query("INSERT INTO public.measurements(PM2_5, PM10, TIME_STAMP, humidity, temperature, wind_speed, wind_direction, latitude, longitude) VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9)", [e.pm2_5, e.pm10, e.timestamp, e.humidity, e.temperature, e.windSpeed, e.windDirection, e.latitude, e.longitude])
         .catch(e => console.error(e.stack))
