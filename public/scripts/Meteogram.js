@@ -299,6 +299,7 @@ Meteogram.prototype.getChartOptions = function () {
             name: 'Air Humidity',
             color: Highcharts.getOptions().colors[2],
             data: this.humidity,
+            type: 'spline',
             marker: {
                 enabled: false
             },
