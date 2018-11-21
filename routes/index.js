@@ -53,7 +53,7 @@ function loadData() {
                     return {
                         'pm2_5': pm2_5,
                         'pm10': pm10,
-                        timestamp: new Date(e[0].datetime * 1000),
+                        timestamp: moment(e[0].date_str).toDate(),
                         latitude: e[0].loc.coordinates[1],
                         longitude: e[0].loc.coordinates[0]
                     };
