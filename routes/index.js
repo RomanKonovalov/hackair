@@ -44,20 +44,45 @@ function loadData() {
         )
         .then(data => {
             let value = _.chain(data.data).groupBy(e => e.loc.coordinates).value();
+            let promises = [];
+
             _.forOwn(value, (coordinatesGroup, location) => {
-                let datetimeGroup = _.chain(coordinatesGroup).groupBy('datetime').map(e => {
-                    let pm2_5 = _.chain(e).filter(o => o.pollutant_q.name === 'PM2.5_AirPollutantValue').head().value();
-                    pm2_5 = pm2_5 ? pm2_5.pollutant_q.value : null;
-                    let pm10 = _.chain(e).filter(o => o.pollutant_q.name === 'PM10_AirPollutantValue').head().value();
-                    pm10 = pm10 ? pm10.pollutant_q.value : null;
-                    return {
-                        'pm2_5': pm2_5,
-                        'pm10': pm10,
-                        timestamp: moment(e[0].date_str).toDate(),
-                        latitude: e[0].loc.coordinates[1],
-                        longitude: e[0].loc.coordinates[0]
-                    };
-                }).value();
+
+                promises.push(rp({uri: 'http://rad.org.by/flesh/index.php'})
+                    .then(body => {
+                        let array = body.split("&");
+                        let headerArray = array[0].split('=')[1].split('|');
+
+                        let values = _.chain(array).slice(1).map(e => {
+                            let values = e.split('=')[1].split('|');
+                            let result = {station: e.split('=')[0]};
+                            headerArray.forEach((header, index) => {
+                                result[header] = values[index];
+                            });
+                            return result;
+                        }).filter({station: 'MINSK1'}).head().value();
+
+                        let datetimeGroup = _.chain(coordinatesGroup).groupBy('datetime').map(e => {
+                            let pm2_5 = _.chain(e).filter(o => o.pollutant_q.name === 'PM2.5_AirPollutantValue').head().value();
+                            pm2_5 = pm2_5 ? pm2_5.pollutant_q.value : null;
+                            let pm10 = _.chain(e).filter(o => o.pollutant_q.name === 'PM10_AirPollutantValue').head().value();
+                            pm10 = pm10 ? pm10.pollutant_q.value : null;
+                            return {
+                                'pm2_5': pm2_5,
+                                'pm10': pm10,
+                                timestamp: moment(e[0].date_str).toDate(),
+                                latitude: e[0].loc.coordinates[1],
+                                longitude: e[0].loc.coordinates[0],
+                                temperature: values['TEMPER'],
+                                windSpeed: values['SPEEDW'],
+                                windDirection: values['DIRECTW'],
+                                humidity: values['HUMIDITY']
+                            };
+                        }).value();
+
+                        _.forEach(datetimeGroup, e => putReading(e));
+
+                    }));
 
                 /*let optionsWeather = {
                  uri: 'https://api.openweathermap.org/data/2.5/weather',
@@ -80,11 +105,13 @@ function loadData() {
                  });
                  });*/
 
-                _.forEach(datetimeGroup, e => putReading(e));
+                //_.forEach(datetimeGroup, e => putReading(e));
             });
 
+            return Promise.all(promises);
+
         })
-        .then(() => client.query("select time_stamp from public.measurements where humidity is null order by time_stamp asc", []))
+        /*.then(() => client.query("select time_stamp from public.measurements where humidity is null order by time_stamp asc", []))
         .then(queryRes => {
             timestamps = queryRes.rows;
 
@@ -110,7 +137,7 @@ function loadData() {
                     .catch(e => console.error(e.stack)));
             }
             return Promise.all(promises);
-        })
+        })*/
         .catch(e => console.error(e.stack));
 }
 
