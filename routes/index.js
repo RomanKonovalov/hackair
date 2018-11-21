@@ -119,9 +119,7 @@ router.get('/', (req, res, next) => {
 });
 
 router.get('/measurements', (req, res, next) => {
-    let d = new Date();
-    d.setDate(d.getDate() - 2);
-    let from = req.param('from') ? moment.tz(req.param('from') * 1, "Europe/Minsk").add(3, 'hours').toDate() : d;
+    let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-1, 'days').toDate();
     client.query("select * from public.measurements where TIME_STAMP > $1 order by TIME_STAMP asc", [from])
         .then(queryRes => {
             res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude + '_' + e.latitude));

@@ -373,7 +373,7 @@ Meteogram.prototype.parseYrData = function () {
         function (time, i) {
             // Get the times - only Safari can't parse ISO8601 so we need to do
             // some replacements
-            let from = moment.tz(time.time_stamp, "Europe/Minsk").toDate();
+            let from = moment(time.time_stamp).add(3, 'hours').toDate();
             let quality;
             let color;
             if (time.pm2_5 >= 0 && time.pm2_5 <= 10) {
@@ -438,13 +438,12 @@ Meteogram.prototype.parseYrData = function () {
 // On DOM ready...
 
 $(document).ready(function () {
-    let d = new Date();
-    d.setDate(d.getDate() - 1);
+    let d = moment().add(-1, 'days').toISOString();
     $.ajax({
         dataType: 'json',
         url: 'measurements',
         data: {
-            from: d.getTime()
+            from: d
         },
         success: function (measurements) {
             let i = 0;
