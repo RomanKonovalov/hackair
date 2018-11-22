@@ -27,6 +27,7 @@
 
     <script src="scripts/Meteogram.js"></script>
     <script src="scripts/PolarChart.js"></script>
+    <script src="scripts/main.js"></script>
 
     <!-- Custom styles for this template -->
     <link href="stylesheets/dashboard.css" rel="stylesheet">
@@ -209,11 +210,14 @@
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-3 border-bottom">
                 <h1 class="h2">Dashboard</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
+                    <select id="positions" class="btn btn-sm btn-outline-secondary dropdown-toggle mr-2">
+                        This week
+                    </select >
                     <div class="btn-group mr-2">
                         <button class="btn btn-sm btn-outline-secondary">Share</button>
                         <button class="btn btn-sm btn-outline-secondary">Export</button>
                     </div>
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle">
+                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle mr-2">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                              class="feather feather-calendar">

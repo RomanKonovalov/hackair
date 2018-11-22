@@ -69,24 +69,3 @@ function PolarChart(xml, container) {
     });
 }
 
-
-$(document).ready(function () {
-    let d = new Date();
-    d.setDate(d.getDate() - 1);
-    $.ajax({
-        dataType: 'json',
-        url: 'polarChart',
-        success: function (measurements) {
-            let i = 0;
-            _.forOwn(measurements, (value, location) => {
-                $('#container').append('<div id="polarChart' + i + '" style="min-width: 310px; min-height: 400px; margin: 0 auto">' +
-                    '<div style="margin-top: 100px; text-align: center" id="loading">' +
-                    '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
-                    '</div>' +
-                    '</div>');
-                window.polarChart = new PolarChart({time: value, locationName: location}, 'polarChart' + i);
-                i++;
-            });
-        }
-    });
-});

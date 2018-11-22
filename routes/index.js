@@ -8,12 +8,17 @@ const {Client} = require('pg');
 const moment = require('moment-timezone');
 
 const cron = require('node-cron');
+const NodeGeocoder = require('node-geocoder');
 
 const client = new Client({
     connectionString: process.env.DATABASE_URL,
     ssl: false
 });
 client.connect();
+
+const geocoder = NodeGeocoder({
+    provider: 'yandex'
+});
 
 cron.schedule('*/5 * * * *', () => {
     console.log('loading data begin ' + new Date());
@@ -145,21 +150,51 @@ router.get('/', (req, res, next) => {
     res.render('index');
 });
 
-router.get('/measurements', (req, res, next) => {
-    let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-1, 'days').toDate();
-    client.query("select * from public.measurements where TIME_STAMP > $1 order by TIME_STAMP asc", [from])
+router.get('/positions', (req, res) => {
+    let positions;
+    client.query("select distinct longitude, latitude from measurements order by longitude, latitude", [])
         .then(queryRes => {
-            res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude + '_' + e.latitude));
-
+            let promises = [];
+            positions = queryRes.rows;
+            positions.forEach(p => {
+                promises.push(geocoder.reverse({lat: p.latitude, lon: p.longitude})
+                    .then(res => p.name = res[0].city + ', ' + res[0].streetName + ', ' + res[0].streetNumber))
+            });
+            return Promise.all(promises);
         })
+        .then(() => res.status(200).json(positions))
         .catch(e => console.error(e.stack));
-
 });
 
-router.get('/polarChart', (req, res, next) => {
-    client.query("SELECT longitude, latitude, wind_direction, AVG(pm2_5) as pm2_5_avg, AVG(pm10) as pm10_avg FROM measurements GROUP BY wind_direction, longitude, latitude HAVING wind_direction is NOT NULL ORDER BY wind_direction", [])
+router.get('/measurements', (req, res, next) => {
+    let avg = req.query.avg;
+    let longitude = req.query.longitude;
+    let latitude = req.query.latitude;
+    if (avg) {
+        let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-7, 'days').toDate();
+        client.query("select cast(time_stamp as date) as date, avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements group by cast(time_stamp as date), longitude, latitude having cast(time_stamp as date) > $1 order by cast(time_stamp as date) asc", [from])
+            .then(queryRes => {
+                res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude + '_' + e.latitude));
+
+            })
+            .catch(e => console.error(e.stack));
+    } else {
+        let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-1, 'days').toDate();
+        client.query("select time_stamp, pm2_5, pm10, humidity, temperature, wind_speed, wind_direction from public.measurements where TIME_STAMP > $1 and longitude = $2 and latitude = $3 order by TIME_STAMP asc ", [from, longitude, latitude])
+            .then(queryRes => {
+                res.status(200).json(queryRes.rows);
+
+            })
+            .catch(e => console.error(e.stack));
+    }
+});
+
+router.get('/polarChart', (req, res) => {
+    let longitude = req.query.longitude;
+    let latitude = req.query.latitude;
+    client.query("SELECT wind_direction, AVG(pm2_5) as pm2_5_avg, AVG(pm10) as pm10_avg FROM measurements GROUP BY wind_direction, longitude, latitude HAVING wind_direction is NOT NULL and longitude = $1 and latitude = $2 ORDER BY wind_direction", [longitude, latitude])
         .then(queryRes => {
-            res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude + '_' + e.latitude));
+            res.status(200).json(_.chain(queryRes.rows).map(e => _.mapValues(e, value => parseFloat(value))));
         })
         .catch(e => console.error(e.stack));
 });

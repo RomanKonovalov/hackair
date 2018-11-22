@@ -200,7 +200,48 @@ Meteogram.prototype.getChartOptions = function () {
             maxPadding: 0.3,
             minRange: 8,
             tickInterval: 1,
-            gridLineColor: (Highcharts.theme && Highcharts.theme.background2) || '#F0F0F0'
+            gridLineColor: (Highcharts.theme && Highcharts.theme.background2) || '#F0F0F0',
+            plotBands: [{ // Light air
+                from: 0,
+                to: 10,
+                color: 'rgba(68, 170, 213, 0.1)',
+                label: {
+                    text: 'Very good',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }, { // Light breeze
+                from: 10,
+                to: 25,
+                color: 'rgba(0, 0, 0, 0)',
+                label: {
+                    text: 'Good',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }, { // Gentle breeze
+                from: 25,
+                to: 35,
+                color: 'rgba(68, 170, 213, 0.1)',
+                label: {
+                    text: 'Medium',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }, { // Moderate breeze
+                from: 35,
+                to: 100,
+                color: 'rgba(0, 0, 0, 0)',
+                label: {
+                    text: 'Bad',
+                    style: {
+                        color: '#606060'
+                    }
+                }
+            }]
 
         }, { // precipitation axis
             title: {
@@ -393,28 +434,28 @@ Meteogram.prototype.parseYrData = function () {
 
             meteogram.pm2_5.push({
                 x: from,
-                y: time.pm2_5,
+                y: parseFloat(time.pm2_5),
                 quality: quality,
                 color: color
             });
             meteogram.pm10.push({
                 x: from,
-                y: time.pm10
+                y: parseFloat(time.pm10)
             });
 
 
             if (i % 2 === 0) {
                 meteogram.winds.push({
                     x: from,
-                    value: time.wind_speed,
-                    direction: time.wind_direction,
+                    value: parseFloat(time.wind_speed),
+                    direction: parseFloat(time.wind_direction),
                     windDirectionName: time.wind_direction_name
                 });
             }
 
             meteogram.humidity.push({
                 x: from,
-                y: time.humidity
+                y: parseFloat(time.humidity)
             });
 
            /* if (i === 0) {
@@ -437,27 +478,3 @@ Meteogram.prototype.parseYrData = function () {
 
 
 // On DOM ready...
-
-$(document).ready(function () {
-    let d = moment().add(-1, 'days').toISOString();
-    $.ajax({
-        dataType: 'json',
-        url: 'measurements',
-        data: {
-            from: d
-        },
-        success: function (measurements) {
-            let i = 0;
-            _.forOwn(measurements, (value, location) => {
-                $('#container').append('<div id="container' + i + '" style="min-width: 310px; height: 400px; margin: 0 auto">' +
-                    '<div style="margin-top: 100px; text-align: center" id="loading">' +
-                    '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
-                '</div>' +
-                '</div>');
-                window.meteogram = new Meteogram({time: value, locationName: location}, 'container' + i);
-                i++;
-            });
-        },
-        error: Meteogram.prototype.error
-    });
-});
