@@ -172,15 +172,16 @@ router.get('/measurements', (req, res, next) => {
     let latitude = req.query.latitude;
     if (avg) {
         let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-7, 'days').toDate();
-        client.query("select cast(time_stamp as date) as date, avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements group by cast(time_stamp as date), longitude, latitude having cast(time_stamp as date) > $1 order by cast(time_stamp as date) asc", [from])
+        client.query("select cast(time_stamp as date) as date, avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements group by cast(time_stamp as date), longitude, latitude having cast(time_stamp as date) > $1 and longitude = $1 and latitude = $2order by cast(time_stamp as date) asc", [from, longitude, latitude])
             .then(queryRes => {
-                res.status(200).json(_.chain(queryRes.rows).groupBy(e => e.longitude + '_' + e.latitude));
+                res.status(200).json(queryRes.rows);
 
             })
             .catch(e => console.error(e.stack));
     } else {
         let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-1, 'days').toDate();
-        client.query("select time_stamp, pm2_5, pm10, humidity, temperature, wind_speed, wind_direction from public.measurements where TIME_STAMP > $1 and longitude = $2 and latitude = $3 order by TIME_STAMP asc ", [from, longitude, latitude])
+        let to = req.query.to ? moment(req.query.to).toDate() : moment().toDate();
+        client.query("select time_stamp, pm2_5, pm10, humidity, temperature, wind_speed, wind_direction from public.measurements where TIME_STAMP > $1 and TIME_STAMP < $2 and longitude = $3 and latitude = $4 order by TIME_STAMP asc ", [from, to, longitude, latitude])
             .then(queryRes => {
                 res.status(200).json(queryRes.rows);
 
