@@ -56,12 +56,28 @@ function PolarChart(xml, container) {
         series: [{
             type: 'area',
             name: 'PM 2.5 avg',
+            marker: {
+                enabled: false,
+                states: {
+                    hover: {
+                        enabled: true
+                    }
+                }
+            },
             data: _.map(this.data, e => {
                 return [e.wind_direction, e.pm2_5_avg]
             })
         }, {
             type: 'area',
             name: 'PM 10 avg',
+            marker: {
+                enabled: false,
+                states: {
+                    hover: {
+                        enabled: true
+                    }
+                }
+            },
             data: _.map(this.data, e => {
                 return [e.wind_direction, e.pm10_avg]
             })
