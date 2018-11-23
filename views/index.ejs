@@ -28,6 +28,7 @@
 
     <script src="scripts/Meteogram.js"></script>
     <script src="scripts/PolarChart.js"></script>
+    <script src="scripts/MeteogramAvg.js"></script>
     <script src="scripts/main.js"></script>
 
     <!-- Custom styles for this template -->
@@ -52,7 +53,7 @@
             <div class="sidebar-sticky">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">
+                        <a id="dashboard" class="nav-link active" href="#">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                  stroke-linejoin="round" class="feather feather-home">
@@ -99,7 +100,7 @@
                         </a>
                     </li>-->
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a id="reports" class="nav-link" href="#">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                  fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                  stroke-linejoin="round" class="feather feather-bar-chart-2">
@@ -229,6 +230,7 @@
             <div>
                 <div id="meteogram" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
                 <div id="polarChart" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+                <div id="meteogramAvg" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
             </div>
 
             <!--<h2>Section title</h2>

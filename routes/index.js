@@ -172,7 +172,7 @@ router.get('/measurements', (req, res, next) => {
     let latitude = req.query.latitude;
     if (avg) {
         let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-7, 'days').toDate();
-        client.query("select cast(time_stamp as date) as date, avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements group by cast(time_stamp as date), longitude, latitude having cast(time_stamp as date) > $1 and longitude = $1 and latitude = $2order by cast(time_stamp as date) asc", [from, longitude, latitude])
+        client.query("select cast(time_stamp as date) as date, avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements group by cast(time_stamp as date), longitude, latitude having cast(time_stamp as date) > $1 and longitude = $2 and latitude = $3 order by cast(time_stamp as date) asc", [from, longitude, latitude])
             .then(queryRes => {
                 res.status(200).json(queryRes.rows);
 

@@ -31,6 +31,7 @@ function Meteogram(xml, container) {
     this.symbols = [];
     this.winds = [];
     this.humidity = [];
+    this.windSpeed = [];
     this.pm2_5 = [];
     this.pm10 = [];
 
@@ -258,25 +259,25 @@ Meteogram.prototype.getChartOptions = function () {
         }, { // Air pressure
             allowDecimals: false,
             title: { // Title on top of axis
-                text: 'Humidity %',
+                text: 'Wind Speed, m/s',
                 rotation: -90,
-                style: {
+                /*style: {
                     fontSize: '10px',
                     color: Highcharts.getOptions().colors[2]
-                }
+                }*/
             },
             labels: {
-                style: {
+                /*style: {
                     fontSize: '8px',
                     color: Highcharts.getOptions().colors[2]
-                },
+                },*/
                 y: 2,
                 x: 3
             },
             gridLineWidth: 0,
             opposite: true,
             showLastLabel: true,
-            tickPositioner:
+            /*tickPositioner:
                 function () {
                     var max = Math.ceil(this.max) <= 95 ? (Math.ceil(this.max) + (5- Math.ceil(this.max)%5)) : 100,
                         positions = [],
@@ -286,7 +287,7 @@ Meteogram.prototype.getChartOptions = function () {
                         positions.push(tick);
                     }
                     return positions;
-                }
+                }*/
         }],
 
         legend: {
@@ -337,16 +338,16 @@ Meteogram.prototype.getChartOptions = function () {
             zIndex: 2,
             color: '#4f37ff'
         }, {
-            name: 'Air Humidity',
+            name: 'Wind Speed',
             color: Highcharts.getOptions().colors[2],
-            data: this.humidity,
+            data: this.windSpeed,
             type: 'spline',
             marker: {
                 enabled: false
             },
             shadow: false,
             tooltip: {
-                valueSuffix: ' %'
+                valueSuffix: ' m/s'
             },
             dashStyle: 'shortdot',
             yAxis: 2
@@ -359,11 +360,11 @@ Meteogram.prototype.getChartOptions = function () {
             data: this.winds,
             vectorLength: 18,
             yOffset: -15,
-            tooltip: {
+            /*tooltip: {
                 valueSuffix: ' m/s',
                 pointFormat: '<span style="color:{point.color}">\u25CF</span> ' +
                 '{series.name}: <b>{point.value}, {point.windDirectionName}</b><br/>'
-            }
+            }*/
         }]
     };
 };
@@ -453,9 +454,14 @@ Meteogram.prototype.parseYrData = function () {
                 });
             }
 
-            meteogram.humidity.push({
+            /*meteogram.humidity.push({
                 x: from,
                 y: parseFloat(time.humidity)
+            });*/
+
+            meteogram.windSpeed.push({
+                x: from,
+                y: parseFloat(time.wind_speed)
             });
 
            /* if (i === 0) {
