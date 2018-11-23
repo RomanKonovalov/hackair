@@ -105,8 +105,16 @@ $(document).ready(function () {
     datepicker.datepicker('setDate', new Date());
 
     datepicker.datepicker().on('changeDate', function (e) {
-        let from = datepicker.datepicker('getDate');
-        let to = moment(from).add(1, 'days').toDate();
+        let to;
+        let from;
+        if (moment(datepicker.datepicker('getDate')).isSame(moment(), 'day')) {
+            to = new Date();
+            from = moment(to).add(-1, 'days').toDate();
+        } else {
+            from = datepicker.datepicker('getDate');
+            to = moment(from).add(1, 'days').toDate();
+        }
+
         updateGraphics(from, to, $('#positions').find(":selected").data("value"), type);
     });
 
