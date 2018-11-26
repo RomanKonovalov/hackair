@@ -1,4 +1,4 @@
-function MeteogramAvg(xml, container) {
+function MeteogramDayOfAvg(xml, container) {
     // Parallel arrays for the chart data, these are populated as the XML/JSON file
     // is loaded
     this.symbols = [];
@@ -16,12 +16,10 @@ function MeteogramAvg(xml, container) {
             type: 'column'
         },
         title: {
-            text: 'Daily Average'
+            text: 'Day of Week Average'
         },
         xAxis: {
-            categories: _.map(this.data, e => {
-                return moment(e.date).format("MM-DD-YYYY")
-            }),
+            categories:['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
             crosshair: true
         },
         yAxis: {
@@ -74,7 +72,7 @@ function MeteogramAvg(xml, container) {
         tooltip: {
             headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
             pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-            '<td style="padding:0"><b>{point.y:.1f} μg/m3</b></td></tr>',
+            '<td style="padding:0"><b>{point.y:.1f} μg/m3 ({point.pdk:.2f} ПДК)</b></td></tr>',
             footerFormat: '</table>',
             shared: true,
             useHTML: true
@@ -89,12 +87,12 @@ function MeteogramAvg(xml, container) {
         series: [{
             name: 'PM 2.5 avg',
             data: _.map(this.data, e => {
-                return parseFloat(e.pm2_5_avg)
+                return {y: parseFloat(e.pm2_5_avg), pdk: parseFloat(e.pm2_5_avg / 25)}
             })
         }, {
             name: 'PM 10 avg',
             data: _.map(this.data, e => {
-                return parseFloat(e.pm10_avg)
+                return {y: parseFloat(e.pm10_avg), pdk: parseFloat(e.pm10_avg / 50)}
             })
         }]
     });

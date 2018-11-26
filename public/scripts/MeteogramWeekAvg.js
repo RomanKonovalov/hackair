@@ -1,4 +1,4 @@
-function PolarChart(xml, container) {
+function MeteogramWeekAvg(xml, container) {
     // Parallel arrays for the chart data, these are populated as the XML/JSON file
     // is loaded
     this.symbols = [];
@@ -10,36 +10,25 @@ function PolarChart(xml, container) {
     // Initialize
     this.data = xml.time;
     this.location = xml.locationName;
-    this.container = container;
 
-    Highcharts.chart(this.container, {
-
+    Highcharts.chart(container, {
         chart: {
-            polar: true
+            type: 'column'
         },
-
         title: {
-            text: 'Polar Chart for ' + this.location
+            text: 'Last Week Average'
         },
-
-        pane: {
-            startAngle: 0,
-            endAngle: 360
-        },
-
         xAxis: {
-            tickInterval: 45,
-            min: 0,
-            max: 360,
-            labels: {
-                formatter: function () {
-                    return this.value + '°';
-                }
-            }
+            categories: _.map(this.data, e => {
+                return moment(e.date).format("MM-DD-YYYY")
+            }),
+            crosshair: true
         },
-
         yAxis: {
             min: 0,
+            title: {
+                text: 'PM, μg/m3'
+            },
             plotBands: [{ // Light air
                 from: 0,
                 to: 10,
@@ -82,47 +71,33 @@ function PolarChart(xml, container) {
                 }
             }]
         },
-
+        tooltip: {
+            headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
+            pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
+            '<td style="padding:0"><b>{point.y:.1f} μg/m3 ({point.pdk:.2f} ПДК)</b></td></tr>',
+            footerFormat: '</table>',
+            shared: true,
+            useHTML: true
+        },
         plotOptions: {
-            series: {
-                pointStart: 45,
-                pointInterval: 90
-            },
             column: {
-                pointPadding: 0,
-                groupPadding: 0
+                pointPadding: 0.2,
+                borderWidth: 0
             }
         },
 
         series: [{
-            type: 'area',
             name: 'PM 2.5 avg',
-            marker: {
-                enabled: true,
-                states: {
-                    hover: {
-                        enabled: true
-                    }
-                }
-            },
             data: _.map(this.data, e => {
-                return [e.wind_direction, e.pm2_5_avg]
+                return {y: parseFloat(e.pm2_5_avg), pdk: parseFloat(e.pm2_5_avg / 25)}
             })
         }, {
-            type: 'area',
             name: 'PM 10 avg',
-            marker: {
-                enabled: true,
-                states: {
-                    hover: {
-                        enabled: true
-                    }
-                }
-            },
             data: _.map(this.data, e => {
-                return [e.wind_direction, e.pm10_avg]
+                return {y: parseFloat(e.pm10_avg), pdk: parseFloat(e.pm10_avg / 50)}
             })
         }]
     });
+
 }
 

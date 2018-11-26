@@ -33,10 +33,12 @@ function updateGraphics(from, to, position, type) {
         $('#meteogram').hide();
         $.ajax({
             dataType: 'json',
-            url: 'polarChart',
+            url: 'measurements',
             data: {
                 longitude: position.longitude,
-                latitude: position.latitude
+                latitude: position.latitude,
+                avg: true,
+                group: 'windDirection'
             },
             success: function (value) {
                 let i = 0;
@@ -60,13 +62,34 @@ function updateGraphics(from, to, position, type) {
             },
             success: function (value) {
                 let i = 0;
-                let meteogramAvg = $('#meteogramAvg');
+                let meteogramAvg = $('#meteogramWeekAvg');
                 meteogramAvg.show();
                 meteogramAvg.html('');
                 meteogramAvg.append('<div style="margin-top: 100px; text-align: center" id="loading">' +
                     '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
                     '</div>');
-                window.polarChart = new MeteogramAvg({time: value, locationName: locationName}, 'meteogramAvg');
+                window.polarChart = new MeteogramWeekAvg({time: value, locationName: locationName}, 'meteogramWeekAvg');
+            }
+        });
+
+        $.ajax({
+            dataType: 'json',
+            url: 'measurements',
+            data: {
+                longitude: position.longitude,
+                latitude: position.latitude,
+                avg: true,
+                group: 'dayOfWeek'
+            },
+            success: function (value) {
+                let i = 0;
+                let meteogramAvg = $('#meteogramDayOfWeekAvg');
+                meteogramAvg.show();
+                meteogramAvg.html('');
+                meteogramAvg.append('<div style="margin-top: 100px; text-align: center" id="loading">' +
+                    '<i class="fa fa-spinner fa-spin"></i> Loading data from external source' +
+                    '</div>');
+                window.polarChart = new MeteogramDayOfAvg({time: value, locationName: locationName}, 'meteogramDayOfWeekAvg');
             }
         });
     }
