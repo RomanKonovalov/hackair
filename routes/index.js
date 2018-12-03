@@ -202,12 +202,24 @@ router.get('/measurements', (req, res, next) => {
                 .catch(e => console.error(e.stack));
         } else {
             let from = req.query.from ? moment(req.query.from).toDate() : moment().add(-7, 'days').toDate();
-            client.query("select cast(time_stamp as date) as date, avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements group by cast(time_stamp as date), longitude, latitude having cast(time_stamp as date) > $1 and longitude = $2 and latitude = $3 order by cast(time_stamp as date) asc", [from, longitude, latitude])
-                .then(queryRes => {
-                    res.status(200).json(queryRes.rows);
+            let to = req.query.to;
+            if (to) {
+                to = moment(req.query.to).toDate();
+                client.query("select avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements where time_stamp > $1 and time_stamp < $2 and longitude = $3 and latitude = $4", [from, to, longitude, latitude])
+                    .then(queryRes => {
+                        res.status(200).json(queryRes.rows[0]);
 
-                })
-                .catch(e => console.error(e.stack));
+                    })
+                    .catch(e => console.error(e.stack));
+            } else {
+                client.query("select cast(time_stamp as date) as date, avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements group by cast(time_stamp as date), longitude, latitude having cast(time_stamp as date) > $1 and longitude = $2 and latitude = $3 order by cast(time_stamp as date) asc", [from, longitude, latitude])
+                    .then(queryRes => {
+                        res.status(200).json(queryRes.rows);
+
+                    })
+                    .catch(e => console.error(e.stack));
+            }
+
         }
 
     } else {
