@@ -25,6 +25,8 @@ cron.schedule('*/5 * * * *', () => {
     loadData().then(() => console.log('loading data done ' + new Date()));
 });
 
+loadData();
+
 function loadData() {
     let d = new Date();
     d.setDate(d.getDate() - 2);
@@ -34,12 +36,12 @@ function loadData() {
     return client.query("select time_stamp from public.measurements ORDER BY time_stamp DESC LIMIT 1", [])
         .then(queryRes => {
                 let options = {
-                    uri: 'https://api.hackair.eu/measurements',
+                    uri: 'https://api.opensensemap.org/boxes/data',
                     qs: {
-                        location: '27.31887817382813,53.83348592751201|27.807426452636722,53.95487343610632',
-                        timestampStart: queryRes.rows[0] ? queryRes.rows[0].time_stamp.toISOString() : d.toISOString(),
-                        show: 'all',
-                        source: 'sensors_arduino,sensors_bleair,webservices'
+                        bbox: '27.31887817382813,53.83348592751201,27.807426452636722,53.95487343610632',
+                        "from-date": queryRes.rows[0] ? queryRes.rows[0].time_stamp.toISOString() : d.toISOString(),
+                        phenomenon: 'PM2.5',
+                        format: 'json'
                     },
                     json: true
                 };
@@ -48,22 +50,24 @@ function loadData() {
             }
         )
         .then(data => {
-            let value = _.chain(data.data).groupBy(e => e.loc.coordinates).value();
+            let value = _.chain(data).groupBy(function (e) {
+                return {lat: e.lat, lon: e.lon};
+            }).value();
             let promises = [];
 
             _.forOwn(value, (coordinatesGroup, location) => {
 
-                let datetimeGroup = _.chain(coordinatesGroup).groupBy('datetime').map(e => {
-                    let pm2_5 = _.chain(e).filter(o => o.pollutant_q.name === 'PM2.5_AirPollutantValue').head().value();
-                    pm2_5 = pm2_5 ? pm2_5.pollutant_q.value : null;
-                    let pm10 = _.chain(e).filter(o => o.pollutant_q.name === 'PM10_AirPollutantValue').head().value();
-                    pm10 = pm10 ? pm10.pollutant_q.value : null;
+                let datetimeGroup = _.chain(coordinatesGroup).map(e => {
+                    let pm2_5 = e.value;
+                    //pm2_5 = pm2_5 ? pm2_5.pollutant_q.value : null;
+                    //let pm10 = _.chain(e).filter(o => o.pollutant_q.name === 'PM10_AirPollutantValue').head().value();
+                    //pm10 = pm10 ? pm10.pollutant_q.value : null;
                     return {
                         'pm2_5': pm2_5,
-                        'pm10': pm10,
-                        timestamp: moment(e[0].date_str).toDate(),
-                        latitude: e[0].loc.coordinates[1],
-                        longitude: e[0].loc.coordinates[0]
+                        //'pm10': pm10,
+                        timestamp: moment(e.createdAt).toDate(),
+                        latitude: e.lat,
+                        longitude: e.lon
                     };
                 }).value();
 
@@ -205,7 +209,7 @@ router.get('/measurements', (req, res, next) => {
             let to = req.query.to;
             if (to) {
                 to = moment(req.query.to).toDate();
-                client.query("select avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements where time_stamp > $1 and time_stamp < $2 and longitude = $3 and latitude = $4", [from, to, longitude, latitude])
+                client.query("select avg(pm2_5) as pm2_5_avg, avg(pm10) as pm10_avg from measurements where time_stamp >= $1 and time_stamp <= $2 and longitude = $3 and latitude = $4", [from, to, longitude, latitude])
                     .then(queryRes => {
                         res.status(200).json(queryRes.rows[0]);
 
